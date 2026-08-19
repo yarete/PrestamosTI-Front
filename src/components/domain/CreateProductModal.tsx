@@ -61,9 +61,23 @@ export const CreateProductModal: React.FC<CreateProductModalProps> = ({ isOpen, 
           <div className="flex flex-col gap-6">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-2">Adjunte su imagen</label>
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors cursor-pointer bg-white h-48">
-                <Plus className="w-8 h-8 mb-2" />
-                <span className="text-sm font-medium">Imagen .jpg, .png</span>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors cursor-pointer bg-white h-48 relative overflow-hidden group">
+                {product?.imageUrl ? (
+                  <>
+                    <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <span className="text-white font-medium text-sm flex flex-col items-center gap-1">
+                        <ArrowRepeat className="w-6 h-6" />
+                        Cambiar foto
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-8 h-8 mb-2" />
+                    <span className="text-sm font-medium">Imagen .jpg, .png</span>
+                  </>
+                )}
               </div>
             </div>
 

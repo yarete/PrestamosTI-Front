@@ -3,7 +3,7 @@ import { Toast } from '../components/ui/Toast';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning' | 'delete';
 
-interface ToastMessage {
+export interface ToastMessage {
   id: string;
   message: string;
   type: ToastType;
@@ -39,9 +39,8 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         {toasts.map((toast) => (
           <Toast 
             key={toast.id} 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => removeToast(toast.id)} 
+            {...toast}
+            onRemove={() => removeToast(toast.id)} 
           />
         ))}
       </div>

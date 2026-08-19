@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { CheckLg, XCircle, InfoCircle, ExclamationTriangle, Trash } from 'react-bootstrap-icons';
-import type { ToastType } from '../../contexts/ToastContext';
+import type { ToastType, ToastMessage } from '../../contexts/ToastContext';
 
-interface ToastProps {
-  message: string;
-  type: ToastType;
-  onClose: () => void;
-}
-
-export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
+export const Toast: React.FC<ToastMessage & { onRemove: (id: string) => void }> = ({
+  id,
+  type,
+  message,
+  onRemove,
+}) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -17,7 +16,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const config = {
+  const config: Record<ToastType, { icon: React.ReactNode; progressBg: string }> = {
     success: {
       icon: (
         <div className="w-8 h-8 rounded-full border-[2.5px] border-[#22c55e] flex items-center justify-center shrink-0">
@@ -58,6 +57,15 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
       <div className="flex-1 text-[15px] font-bold text-gray-800">
         {message}
       </div>
+      <button 
+        onClick={() => onRemove(id)}
+        className="absolute right-4 text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        <span className="sr-only">Cerrar</span>
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
       
       {/* Animated Progress Bar */}
       <div 

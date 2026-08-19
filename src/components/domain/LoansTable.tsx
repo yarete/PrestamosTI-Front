@@ -6,15 +6,18 @@ import { Badge } from '../ui/Badge';
 interface LoansTableProps {
   loans: ILoan[];
   isSelectionMode: boolean;
+  selectedLoans?: string[];
+  onToggleLoan?: (id: string) => void;
+  onToggleAll?: () => void;
 }
 
-export const LoansTable = ({ loans, isSelectionMode }: LoansTableProps) => {
+export const LoansTable = ({ loans, isSelectionMode, selectedLoans = [], onToggleLoan, onToggleAll }: LoansTableProps) => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const [selectedLoanId, setSelectedLoanId] = useState<string | null>(null);
+  const [localSelectedId, setLocalSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     const handleClickOutside = () => {
-      setSelectedLoanId(null);
+      setLocalSelectedId(null);
       setOpenDropdownId(null);
     };
 
@@ -31,7 +34,11 @@ export const LoansTable = ({ loans, isSelectionMode }: LoansTableProps) => {
 
   const handleRowClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setSelectedLoanId(selectedLoanId === id ? null : id);
+    if (isSelectionMode && onToggleLoan) {
+      onToggleLoan(id);
+    } else {
+      setLocalSelectedId(localSelectedId === id ? null : id);
+    }
     setOpenDropdownId(null);
   };
 
@@ -39,7 +46,7 @@ export const LoansTable = ({ loans, isSelectionMode }: LoansTableProps) => {
     <div className="flex flex-col w-full h-full justify-between bg-white border-x border-b border-gray-100 rounded-b-md relative pb-12">
       <div className="w-full">
         {loans.map((loan, index) => {
-          const isSelected = selectedLoanId === loan.id;
+          const isSelected = isSelectionMode ? selectedLoans.includes(loan.id) : localSelectedId === loan.id;
           return (
           <div 
             key={loan.id} 
@@ -51,11 +58,11 @@ export const LoansTable = ({ loans, isSelectionMode }: LoansTableProps) => {
             }`}
           >
             {isSelectionMode && (
-              <div className="flex items-center justify-center sm:justify-start">
+              <div className="flex items-center justify-center sm:justify-start" onClick={(e) => e.stopPropagation()}>
                 <input 
                   type="checkbox" 
                   checked={isSelected}
-                  onChange={() => {}} 
+                  onChange={() => onToggleLoan && onToggleLoan(loan.id)} 
                   className="rounded border-gray-300 text-[#0a2a5e] focus:ring-[#0a2a5e] w-4 h-4 cursor-pointer" 
                 />
               </div>
