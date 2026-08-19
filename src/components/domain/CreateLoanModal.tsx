@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { DatePickerPopover } from '../ui/DatePickerPopover';
 import { formatDate } from '../../utils/date';
+import { useToast } from '../../contexts/ToastContext';
 
 interface CreateLoanModalProps {
   isOpen: boolean;
@@ -32,16 +33,67 @@ export const CreateLoanModal: React.FC<CreateLoanModalProps> = ({ isOpen, onClos
     fechaInicio: null as Date | null,
     fechaLimite: null as Date | null
   });
+  const { showToast } = useToast();
   
   // Stores quantity for each selected product ID
   const [selectedProducts, setSelectedProducts] = useState<Record<number, number>>({});
 
+  const validateStepOne = () => {
+    if (!loanData.usuario.trim()) {
+      showToast('El nombre del usuario es obligatorio.', 'error');
+      return false;
+    }
+
+    if (!loanData.fechaInicio) {
+      showToast('La fecha de inicio es obligatoria.', 'error');
+      return false;
+    }
+
+    if (!loanData.fechaLimite) {
+      showToast('La fecha límite es obligatoria.', 'error');
+      return false;
+    }
+
+    if (loanData.fechaLimite < loanData.fechaInicio) {
+      showToast('La fecha límite no puede ser anterior a la fecha de inicio.', 'error');
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateSelection = () => {
+    if (Object.keys(selectedProducts).length === 0) {
+      showToast('Debes seleccionar al menos un producto para crear el préstamo.', 'error');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleNext = () => {
+    if (step === 1 && !validateStepOne()) {
+      return;
+    }
+
+    if (step === 2 && !validateSelection()) {
+      return;
+    }
+
     if (step < 3) setStep(step + 1);
   };
 
   const handleBack = () => {
     if (step > 1) setStep(step - 1);
+  };
+
+  const handleSaveLoan = () => {
+    if (!validateStepOne() || !validateSelection()) {
+      return;
+    }
+
+    showToast('Préstamo creado correctamente.', 'success');
+    handleClose();
   };
 
   const toggleProduct = (productId: number) => {
@@ -76,7 +128,7 @@ export const CreateLoanModal: React.FC<CreateLoanModalProps> = ({ isOpen, onClos
       <div className="flex flex-col gap-1">
         <label className="text-sm font-semibold text-gray-700">Nombre del Usuario:</label>
         <Input 
-          placeholder="Ingrese el nombre del Préstamo" 
+          placeholder="Ingrese el nombre del usuario" 
           value={loanData.usuario}
           onChange={(e) => setLoanData({...loanData, usuario: e.target.value})}
           icon={Person} 
@@ -85,10 +137,11 @@ export const CreateLoanModal: React.FC<CreateLoanModalProps> = ({ isOpen, onClos
       <div className="grid grid-cols-2 gap-4">
         <DatePickerPopover 
           align="left"
+          position="bottom"
           initialDate={loanData.fechaInicio}
           onApply={(date) => setLoanData({...loanData, fechaInicio: date})}
         >
-          <div className="flex flex-col gap-1 pointer-events-none">
+          <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-700">Fecha de Inicio:</label>
             <Input 
               readOnly
@@ -100,10 +153,11 @@ export const CreateLoanModal: React.FC<CreateLoanModalProps> = ({ isOpen, onClos
         </DatePickerPopover>
         <DatePickerPopover 
           align="right"
+          position="bottom"
           initialDate={loanData.fechaLimite}
           onApply={(date) => setLoanData({...loanData, fechaLimite: date})}
         >
-          <div className="flex flex-col gap-1 pointer-events-none">
+          <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-700">Fecha de Límite:</label>
             <Input 
               readOnly
@@ -258,7 +312,7 @@ export const CreateLoanModal: React.FC<CreateLoanModalProps> = ({ isOpen, onClos
                 Atrás
               </Button>
             )}
-            <Button variant="primary" onClick={step === 3 ? handleClose : handleNext}>
+            <Button variant="primary" onClick={step === 3 ? handleSaveLoan : handleNext}>
               {step === 1 ? 'Siguiente' : step === 2 ? 'Confirmar Selección' : 'Guardar Préstamo'}
             </Button>
           </div>

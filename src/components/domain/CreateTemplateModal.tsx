@@ -135,6 +135,7 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
   const isEditMode = templateToEdit !== null;
   const [formData, setFormData] = useState<ICreateTemplatePayload>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const { showToast } = useToast();
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -151,6 +152,7 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
         setFormData(EMPTY_FORM);
       }
       setIsSaving(false);
+      setShowConfirm(false);
     }
   }, [isOpen, templateToEdit]);
 
@@ -161,17 +163,36 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = async () => {
+  const validateTemplate = () => {
     if (!formData.templateName.trim()) {
-      showToast('El nombre de la plantilla es obligatorio.', 'delete');
-      return;
+      return 'El nombre de la plantilla es obligatorio.';
     }
-    // In edit mode, the file is optional (keeps the existing one)
+
     if (!isEditMode && !formData.file) {
-      showToast('Debe adjuntar un documento antes de guardar.', 'delete');
+      return 'Debe adjuntar un documento antes de guardar.';
+    }
+
+    return '';
+  };
+
+  const handleSave = () => {
+    const validationError = validateTemplate();
+    if (validationError) {
+      showToast(validationError, 'error');
       return;
     }
-    
+
+    setShowConfirm(true);
+  };
+
+  const handleConfirmSave = async () => {
+    const validationError = validateTemplate();
+    if (validationError) {
+      showToast(validationError, 'error');
+      setShowConfirm(false);
+      return;
+    }
+
     setIsSaving(true);
     try {
       if (onSave) {
@@ -181,10 +202,11 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
         isEditMode ? 'Plantilla actualizada con éxito' : 'Plantilla guardada con éxito',
         'success',
       );
+      setShowConfirm(false);
       onClose();
     } catch (error) {
       console.error(error);
-      showToast('Ocurrió un error al guardar la plantilla.', 'delete');
+      showToast('Ocurrió un error al guardar la plantilla.', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -224,105 +246,138 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
     formData.file?.name ?? templateToEdit?.file?.name ?? 'Documento existente';
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={isEditMode ? 'Editar Plantilla' : 'Plantillas'}
-      subtitle={
-        isEditMode
-          ? 'Actualiza el nombre, descripción o documento de esta plantilla'
-          : 'Gestiona y monitorea tus plantillas de equipos IT'
-      }
-      icon={<FileEarmarkText className="w-6 h-6" />}
-    >
-      <div className="flex flex-col">
-        {/* ── Form body ── */}
-        <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-4 flex flex-col gap-4 sm:gap-5">
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={isEditMode ? 'Editar Plantilla' : 'Plantillas'}
+        subtitle={
+          isEditMode
+            ? 'Actualiza el nombre, descripción o documento de esta plantilla'
+            : 'Gestiona y monitorea tus plantillas de equipos IT'
+        }
+        icon={<FileEarmarkText className="w-6 h-6" />}
+      >
+        <div className="flex flex-col">
+          {/* ── Form body ── */}
+          <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-4 flex flex-col gap-4 sm:gap-5">
 
-          {/* Template name */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="template-name-input" className="text-sm font-semibold text-gray-700">
-              Nombre de la Plantilla:
-            </label>
-            <Input
-              id="template-name-input"
-              placeholder="Documento-Lab"
-              value={formData.templateName}
-              onChange={(e) => handleFieldChange('templateName', e.target.value)}
-              className="bg-white border border-gray-200 shadow-sm"
-            />
+            {/* Template name */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="template-name-input" className="text-sm font-semibold text-gray-700">
+                Nombre de la Plantilla:
+              </label>
+              <Input
+                id="template-name-input"
+                placeholder="Documento-Lab"
+                value={formData.templateName}
+                onChange={(e) => handleFieldChange('templateName', e.target.value)}
+                className="bg-white border border-gray-200 shadow-sm"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="template-description-textarea" className="text-sm font-semibold text-gray-700">
+                Descripción:
+              </label>
+              <textarea
+                id="template-description-textarea"
+                placeholder="Este documento tendrá información sobre..."
+                value={formData.description}
+                onChange={(e) => handleFieldChange('description', e.target.value)}
+                rows={3}
+                className="
+                  w-full resize-none rounded-md border border-gray-200
+                  bg-white px-3 py-2 text-sm text-gray-700
+                  placeholder-gray-400 shadow-sm
+                  focus:outline-none focus:ring-2 focus:ring-[#0a2a5e]
+                  transition-shadow
+                "
+              />
+            </div>
+
+            {/* File section */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-700">
+                {isEditMode ? 'Documento adjunto' : 'Adjunte su documento'}
+              </label>
+
+              {isEditMode && showCurrentPreview ? (
+                /* Edit mode: show current file thumbnail with hover-to-replace */
+                <CurrentFilePreview
+                  previewImageUrl={templateToEdit!.previewImageUrl}
+                  filename={currentFilename}
+                  onReplace={handleReplaceClick}
+                  fileInputRef={replaceFileInputRef}
+                  onFileInputChange={handleReplaceFileChange}
+                />
+              ) : (
+                /* Create mode (or edit without existing file): standard dropzone */
+                <FileDropzone
+                  acceptedTypes=".pdf"
+                  maxSizeMB={15}
+                  selectedFile={formData.file}
+                  onFileSelect={(file) => handleFieldChange('file', file)}
+                  label={isEditMode ? 'Adjunte el nuevo PDF' : 'Adjunte su documento'}
+                  hint="Archivo .pdf, máx. de 15MB"
+                />
+              )}
+            </div>
           </div>
 
-          {/* Description */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="template-description-textarea" className="text-sm font-semibold text-gray-700">
-              Descripción:
-            </label>
-            <textarea
-              id="template-description-textarea"
-              placeholder="Este documento tendrá información sobre..."
-              value={formData.description}
-              onChange={(e) => handleFieldChange('description', e.target.value)}
-              rows={3}
-              className="
-                w-full resize-none rounded-md border border-gray-200
-                bg-white px-3 py-2 text-sm text-gray-700
-                placeholder-gray-400 shadow-sm
-                focus:outline-none focus:ring-2 focus:ring-[#0a2a5e]
-                transition-shadow
-              "
-            />
-          </div>
-
-          {/* File section */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-gray-700">
-              {isEditMode ? 'Documento adjunto' : 'Adjunte su documento'}
-            </label>
-
-            {isEditMode && showCurrentPreview ? (
-              /* Edit mode: show current file thumbnail with hover-to-replace */
-              <CurrentFilePreview
-                previewImageUrl={templateToEdit!.previewImageUrl}
-                filename={currentFilename}
-                onReplace={handleReplaceClick}
-                fileInputRef={replaceFileInputRef}
-                onFileInputChange={handleReplaceFileChange}
-              />
-            ) : (
-              /* Create mode (or edit without existing file): standard dropzone */
-              <FileDropzone
-                acceptedTypes=".pdf"
-                maxSizeMB={15}
-                selectedFile={formData.file}
-                onFileSelect={(file) => handleFieldChange('file', file)}
-                label={isEditMode ? 'Adjunte el nuevo PDF' : 'Adjunte su documento'}
-                hint="Archivo .pdf, máx. de 15MB"
-              />
-            )}
+          {/* ── Footer ── */}
+          <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center border-t border-gray-100 bg-gray-50/50">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={isSaving}
+              className="px-5 border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-5 bg-[#0a2a5e] hover:bg-[#1a3d75] disabled:opacity-70 disabled:cursor-wait"
+            >
+              {isSaving ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Guardar Plantilla')}
+            </Button>
           </div>
         </div>
+      </Modal>
 
-        {/* ── Footer ── */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center border-t border-gray-100 bg-gray-50/50">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isSaving}
-            className="px-5 border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-5 bg-[#0a2a5e] hover:bg-[#1a3d75] disabled:opacity-70 disabled:cursor-wait"
-          >
-            {isSaving ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Guardar Plantilla')}
-          </Button>
+      <Modal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        title={isEditMode ? 'Confirmar cambios' : 'Confirmar creación'}
+        maxWidth="sm"
+      >
+        <div className="p-6">
+          <p className="mb-6 text-sm leading-6 text-gray-700">
+            {isEditMode
+              ? '¿Deseas guardar los cambios realizados en esta plantilla?'
+              : '¿Deseas crear esta plantilla con la información ingresada?'}
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirm(false)}
+              className="border-gray-200 text-gray-600 hover:bg-gray-50"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmSave}
+              className="bg-[#0a2a5e] hover:bg-[#123a7a]"
+            >
+              {isEditMode ? 'Guardar cambios' : 'Crear plantilla'}
+            </Button>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </>
   );
 };
