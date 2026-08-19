@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, ChevronLeft, ChevronRight } from 'react-bootstrap-icons';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { Input } from '../components/ui/Input';
@@ -12,7 +12,9 @@ import { useToast } from '../contexts/ToastContext';
 import { TemplatesEmptyState, NoSearchResults } from '../components/domain/TemplatesEmptyState';
 
 interface TemplatesPageProps {
-  onViewChange: (v: string) => void;
+  onViewChange: (v: string, action?: string | null) => void;
+  initialAction?: string | null;
+  onActionConsumed?: () => void;
 }
 
 // ── Mock data ──────────────────────────────────────────────────────────────────
@@ -35,7 +37,7 @@ function triggerDownload(url: string, filename: string): void {
   document.body.removeChild(a);
 }
 
-export const TemplatesPage: React.FC<TemplatesPageProps> = ({ onViewChange }) => {
+export const TemplatesPage: React.FC<TemplatesPageProps> = ({ onViewChange, initialAction, onActionConsumed }) => {
   const [templates, setTemplates] = useState<ITemplate[]>(MOCK_TEMPLATES);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -193,6 +195,15 @@ export const TemplatesPage: React.FC<TemplatesPageProps> = ({ onViewChange }) =>
     setCurrentPage(1);
   };
 
+  useEffect(() => {
+    if (!initialAction) return;
+
+    if (initialAction === 'create-template') {
+      setEditingTemplate(null);
+      onActionConsumed?.();
+    }
+  }, [initialAction, onActionConsumed]);
+
   const hasActiveSearch = searchQuery.length > 0;
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -303,6 +314,7 @@ export const TemplatesPage: React.FC<TemplatesPageProps> = ({ onViewChange }) =>
       <TemplateEditorWindow
         isOpen={viewerTemplate !== null}
         template={viewerTemplate}
+        mode={viewerMode}
         onClose={() => setViewerTemplate(null)}
         onSaveTemplate={handleSaveFromEditor}
       />

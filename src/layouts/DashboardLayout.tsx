@@ -5,7 +5,7 @@ import { Topbar } from './Topbar';
 interface DashboardLayoutProps {
   children: ReactNode;
   currentView: string;
-  onViewChange: (v: string) => void;
+  onViewChange: (v: string, action?: string | null) => void;
   topbarProps?: {
     title?: string;
     subtitle?: string;

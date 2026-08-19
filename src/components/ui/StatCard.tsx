@@ -28,17 +28,17 @@ export const StatCard: React.FC<StatCardProps> = ({
   hasData = false
 }) => {
   const getTrendColor = () => {
-    if (!hasData) return "text-gray-400";
-    if (trendType === 'up') return "text-green-500";
-    if (trendType === 'down') return "text-red-500";
-    return "text-gray-400";
+    if (!hasData) return 'text-gray-400';
+    if (trendType === 'up') return 'text-blue-600';
+    if (trendType === 'down') return 'text-rose-500';
+    return 'text-gray-400';
   };
 
   const getChartColor = () => {
-    if (!hasData) return "#e5e7eb"; // gray-200
-    if (trendType === 'down') return "#f87171"; // red-400
-    if (trendType === 'up' && chartType === 'line') return "#fbbf24"; // yellow-400
-    return "#60a5fa"; // blue-400
+    if (!hasData) return '#e5e7eb';
+    if (trendType === 'down') return '#fb7185';
+    if (trendType === 'up' && chartType === 'line') return '#60a5fa';
+    return '#60a5fa';
   };
 
   return (

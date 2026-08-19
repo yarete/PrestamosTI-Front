@@ -8,10 +8,9 @@ interface LoansTableProps {
   isSelectionMode: boolean;
   selectedLoans?: string[];
   onToggleLoan?: (id: string) => void;
-  onToggleAll?: () => void;
 }
 
-export const LoansTable = ({ loans, isSelectionMode, selectedLoans = [], onToggleLoan, onToggleAll }: LoansTableProps) => {
+export const LoansTable = ({ loans, isSelectionMode, selectedLoans = [], onToggleLoan }: LoansTableProps) => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [localSelectedId, setLocalSelectedId] = useState<string | null>(null);
 
@@ -114,16 +113,24 @@ export const LoansTable = ({ loans, isSelectionMode, selectedLoans = [], onToggl
             <div className="text-gray-500">{loan.fechaInicio}</div>
             <div className="text-gray-500">{loan.fechaLimite}</div>
             <div>
-              <Badge variant={loan.estado === 'Activo' ? 'success' : loan.estado === 'Atrasado' ? 'danger' : 'default'}>
+              <Badge
+                variant={
+                  loan.estado === 'Activo'
+                    ? 'success'
+                    : loan.estado === 'Vencido'
+                      ? 'danger'
+                      : 'default'
+                }
+              >
                 {loan.estado}
               </Badge>
             </div>
           </div>
         )})}
       </div>
-
+ 
       {/* Floating Action Panel */}
-      {selectedLoanId && (
+      {localSelectedId && (
         <div onClick={(e) => e.stopPropagation()} className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.15)] border border-gray-100 px-8 py-3.5 flex items-center gap-4 z-20 animate-in fade-in slide-in-from-bottom-4 duration-200">
           <button className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-[#0a2a5e] hover:bg-gray-100 px-4 py-2 rounded-full transition-colors">
             <Pencil className="w-4 h-4" />

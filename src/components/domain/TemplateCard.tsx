@@ -4,7 +4,6 @@ import {
   Trash,
   Pencil,
   Eye,
-  ArrowUpRight,
   Download,
 } from 'react-bootstrap-icons';
 import { type ITemplate } from '../../types/template.types';

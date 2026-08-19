@@ -4,5 +4,5 @@ export interface ILoan {
   producto: string;
   fechaInicio: string;
   fechaLimite: string;
-  estado: "Activo" | "Devuelto" | "Atrasado";
+  estado: 'Activo' | 'Vencido' | 'Cancelado';
 }

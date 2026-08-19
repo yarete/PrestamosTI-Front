@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid, Box, FileEarmarkText, FileText, BoxArrowRight } from 'react-bootstrap-icons';
 
-export const Sidebar: React.FC<{ currentView: string; onViewChange: (v: string) => void }> = ({ currentView, onViewChange }) => {
+export const Sidebar: React.FC<{ currentView: string; onViewChange: (v: string, action?: string | null) => void }> = ({ currentView, onViewChange }) => {
   const menuItems = [
     { id: 'dashboard', icon: Grid, label: 'Inicio' },
     { id: 'loans', icon: FileText, label: 'Préstamos' },

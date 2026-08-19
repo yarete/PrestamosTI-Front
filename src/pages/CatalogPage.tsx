@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, UpcScan, Plus, ChevronLeft, ChevronRight, Inbox } from 'react-bootstrap-icons';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -20,10 +20,12 @@ const mockProducts: IProduct[] = Array(8).fill(null).map((_, index) => ({
 }));
 
 interface CatalogPageProps {
-  onViewChange: (v: string) => void;
+  onViewChange: (v: string, action?: string | null) => void;
+  initialAction?: string | null;
+  onActionConsumed?: () => void;
 }
 
-export const CatalogPage: React.FC<CatalogPageProps> = ({ onViewChange }) => {
+export const CatalogPage: React.FC<CatalogPageProps> = ({ onViewChange, initialAction, onActionConsumed }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<IProduct | null>(null);
   const [productToDelete, setProductToDelete] = useState<IProduct | null>(null);
@@ -63,6 +65,22 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ onViewChange }) => {
     setIsCreateModalOpen(false);
     setTimeout(() => setProductToEdit(null), 300); // delay to avoid UI jumping during close animation
   };
+
+  useEffect(() => {
+    if (!initialAction) return;
+
+    if (initialAction === 'create-product') {
+      setIsCreateModalOpen(true);
+      setProductToEdit(null);
+      onActionConsumed?.();
+      return;
+    }
+
+    if (initialAction === 'open-units') {
+      setSelectedProductForUnits(mockProducts[0]);
+      onActionConsumed?.();
+    }
+  }, [initialAction, onActionConsumed]);
 
   return (
     <DashboardLayout 

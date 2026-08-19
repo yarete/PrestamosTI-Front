@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, UpcScan, FileEarmarkText, Plus, Calendar } from 'react-bootstrap-icons';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -19,10 +19,12 @@ const mockLoans: ILoan[] = Array(8).fill(null).map((_, index) => ({
 }));
 
 interface LoansPageProps {
-  onViewChange: (v: string) => void;
+  onViewChange: (v: string, action?: string | null) => void;
+  initialAction?: string | null;
+  onActionConsumed?: () => void;
 }
 
-export const LoansPage: React.FC<LoansPageProps> = ({ onViewChange }) => {
+export const LoansPage: React.FC<LoansPageProps> = ({ onViewChange, initialAction, onActionConsumed }) => {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
@@ -46,8 +48,8 @@ export const LoansPage: React.FC<LoansPageProps> = ({ onViewChange }) => {
   const filteredLoans = mockLoans.filter(loan => {
     // Tab Filter
     if (activeTab === 'Activos' && loan.estado !== 'Activo') return false;
-    if (activeTab === 'Vencidos' && loan.estado !== 'Vencido' && loan.estado !== 'Atrasado') return false;
-    if (activeTab === 'Cancelados' && loan.estado !== 'Cancelado' && loan.estado !== 'Devuelto') return false;
+    if (activeTab === 'Vencidos' && loan.estado !== 'Vencido') return false;
+    if (activeTab === 'Cancelados' && loan.estado !== 'Cancelado') return false;
 
     // Search Filter
     if (searchQuery) {
@@ -79,12 +81,38 @@ export const LoansPage: React.FC<LoansPageProps> = ({ onViewChange }) => {
   };
 
   const handleToggleAll = () => {
+    if (filteredLoans.length === 0) {
+      setSelectedLoans([]);
+      return;
+    }
+
     if (selectedLoans.length === filteredLoans.length) {
       setSelectedLoans([]);
     } else {
       setSelectedLoans(filteredLoans.map(l => l.id));
     }
   };
+
+  useEffect(() => {
+    if (!initialAction) return;
+
+    if (initialAction === 'create-loan') {
+      setIsCreateModalOpen(true);
+      onActionConsumed?.();
+      return;
+    }
+
+    if (initialAction === 'filter-active') {
+      setActiveTab('Activos');
+      onActionConsumed?.();
+      return;
+    }
+
+    if (initialAction === 'filter-overdue') {
+      setActiveTab('Vencidos');
+      onActionConsumed?.();
+    }
+  }, [initialAction, onActionConsumed]);
 
   return (
     <DashboardLayout currentView="loans" onViewChange={onViewChange}>
@@ -190,7 +218,6 @@ export const LoansPage: React.FC<LoansPageProps> = ({ onViewChange }) => {
                 isSelectionMode={isSelectionMode} 
                 selectedLoans={selectedLoans}
                 onToggleLoan={handleToggleLoan}
-                onToggleAll={handleToggleAll}
               />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center bg-white border-x border-b border-gray-100 rounded-b-md text-gray-500 p-8">
